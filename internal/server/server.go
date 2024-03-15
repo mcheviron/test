@@ -10,21 +10,22 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"test/internal/database"
+	"test/internal/logger"
 )
 
 type Server struct {
-	port int
-
-	db database.Service
+	port   int
+	logger *logger.Logger
+	db     database.Service
 }
 
-func NewServer() *http.Server {
+func NewServer(logger *logger.Logger) (*http.Server, error) {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
-
-		db: database.New(),
+	db, err := database.New()
+	if err != nil {
+		return nil, fmt.Errorf("error creating new server: %w", err)
 	}
+	NewServer := &Server{port, logger, db}
 
 	// Declare Server config
 	server := &http.Server{
@@ -35,5 +36,5 @@ func NewServer() *http.Server {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	return server
+	return server, nil
 }
